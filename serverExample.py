@@ -1,22 +1,14 @@
-import socket
+from TcpCommunicator import TcpServerEndChar
 
-def exampleServer():
-	TCP_IP = 'localhost'
-	TCP_PORT = 5000
-	BUFFER_SIZE = 20  # Normally 1024, but we want fast response
-	
-	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	s.settimeout(60)
-	s.bind((TCP_IP, TCP_PORT))
-	s.listen(1)
-	
-	conn, addr = s.accept()
-	print("Connection address:" + str(addr))
-	
-	data = b'Hello\n'
-	print("received data:" + str(data))
-	conn.send(data)  # echo
-	
-	conn.close()
+print("Accepting connections...")
+server = TcpServerEndChar(address="localhost", port=5000)
+a, b = server.connect()
+error, msg, errorMsg = server.getMessage()
+c, d = server.sendMessage("Server: How you doing....\n")
 
-exampleServer()
+#print(a)
+#print(b) 
+#print(c)
+#print(d) 
+print(msg)
+print("Program ended")

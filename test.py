@@ -6,10 +6,13 @@ from TcpCommunicator import TcpClient, TcpClienEndChar
 
 testClass2 = TcpClienEndChar(address="localhost", port=5000)
 a, b = testClass2.connect()
-error, message, errorMsg = testClass2.getMessage()
-print(str(message))
-print(repr(errorMsg))
-testClass2.disconnect()
+error1, errorMsg1 = testClass2.sendMessage("Client: How you doing...\n")
+error2, message, errorMsg2 = testClass2.getMessage()
 
-print(b)
-print("All good")
+print(str(message))
+#print(repr(errorMsg1))
+#print(repr(errorMsg2))
+#testClass2.disconnect()
+
+#print(b)
+print("Program ended")
