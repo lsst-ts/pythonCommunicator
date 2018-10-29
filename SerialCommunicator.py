@@ -53,6 +53,6 @@ class SerialCommunicator(ICommunicator):
         return errorCode, errorMsg
 
     def isConnected(self):
-        return serial.isOpen()
+        return self.serial.isOpen()
 
 
