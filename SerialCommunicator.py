@@ -46,8 +46,8 @@ class SerialCommunicator(ICommunicator):
             tempMessage = self.serial.read(1)
             if(tempMessage.decode('ascii')==self.termChar):
                 break
-            message.append(tempMessage).decode('ascii')
-        strMsg = b''.join(message)
+            message.append(tempMessage)
+        strMsg = b''.join(message).decode('ascii')
         if(strMsg == ""): 
             self.deviceConnectionTimeout += 1
         else:
