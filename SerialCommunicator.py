@@ -34,28 +34,17 @@ class SerialCommunicator(ICommunicator):
 
     def connect(self):
         """Class to handle Serial connection"""
-        try:
-            self.serial = serial.Serial(port=self.port, baudrate=self.baudrate, parity=self.parity, stopbits=self.stopBits, bytesize=self.byteSize, timeout=self.timeout)
-            return NOERROR, ""
-        except serial.SerialException as e:
-            return ERROR, e
+        self.serial = serial.Serial(port=self.port, baudrate=self.baudrate, parity=self.parity, stopbits=self.stopBits, bytesize=self.byteSize, timeout=self.timeout)
 
     def disconnect(self):
-        self.clientSocket.close()
+        self.serial.close()
 
     def getMessage(self):
-        try:
-            message = self.serial.read(self.byteToRead)
-            return NOERROR, message, ""
-        except serial.SerialException as e:
-            return ERROR, "", e
+        message = self.serial.read(self.byteToRead).decode('ascii')
+        return message
 
     def sendMessage(self, message):
-        try:
-            self.serial.write(message.encode('ascii')+self.termChar)
-            return NOERROR, ""
-        except serial.SerialException as e:
-            return ERROR, e
+        self.serial.write((message+self.termChar).encode('ascii'))
 
     def reconnect(self):
         """Reconnect tcp connection"""
