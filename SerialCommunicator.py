@@ -40,8 +40,14 @@ class SerialCommunicator(ICommunicator):
         self.serial.close()
 
     def getMessage(self):
-        message = self.serial.read(self.byteToRead).decode('ascii')
-        return message
+        message = []
+        for i in range(self.byteToRead):
+            tempMessage = self.serial.read(1)
+            if(tempMessage.decode('ascii')==self.termChar):
+                break
+            message.append(tempMessage)
+        strMsg = b''.join(message)
+        return strMsg.decode('ascii')
 
     def sendMessage(self, message):
         self.serial.write((message+self.termChar).encode('ascii'))
