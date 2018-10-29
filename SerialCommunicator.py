@@ -31,6 +31,7 @@ class SerialCommunicator(ICommunicator):
         self.termChar = termChar
 
         self.serial = None
+        self.deviceConnectionTimeout = 0
 
     def connect(self):
         """Class to handle Serial connection"""
@@ -45,9 +46,13 @@ class SerialCommunicator(ICommunicator):
             tempMessage = self.serial.read(1)
             if(tempMessage.decode('ascii')==self.termChar):
                 break
-            message.append(tempMessage)
+            message.append(tempMessage).decode('ascii')
         strMsg = b''.join(message)
-        return strMsg.decode('ascii')
+        if(strMsg == ""): 
+            self.deviceConnectionTimeout += 1
+        else:
+            self.deviceConnectionTimeout = 0
+        return strMsg
 
     def sendMessage(self, message):
         self.serial.write((message+self.termChar).encode('ascii'))
@@ -55,10 +60,9 @@ class SerialCommunicator(ICommunicator):
     def reconnect(self):
         """Reconnect tcp connection"""
         self.disconnect()
-        errorCode, errorMsg = self.connect()
-        return errorCode, errorMsg
+        self.connect()
 
     def isConnected(self):
-        return self.serial.isOpen()
+        return self.serial.isOpen(), (self.deviceConnectionTimeout > 5)
 
 
