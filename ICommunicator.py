@@ -21,15 +21,15 @@ class ICommunicator(ABC):
 	def getMessage(self):
 		"""Get message from currect connection 
 	
-		Returns errorCode, message, errorMessage
+		Returns message
 		"""
 		pass
 		
 	@abstractmethod
 	def sendMessage(self, message):
-		"""Send message from currect connection  
+		"""Send message from current connection  
 	
-		Returns errorCode, errorMessage
+		Returns 
 		"""
 		pass
 		
@@ -37,7 +37,15 @@ class ICommunicator(ABC):
 	def reconnect(self):
 		"""Reconnect 
 	
-		Returns errorCode, errorMessage
+		Returns 
+		"""
+		pass
+		
+	@abstractmethod
+	def command(self, commandMessage):
+		"""Send message from currect connection  
+	
+		Returns command response
 		"""
 		pass
 		

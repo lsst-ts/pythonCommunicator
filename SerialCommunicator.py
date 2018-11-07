@@ -57,6 +57,11 @@ class SerialCommunicator(ICommunicator):
     def sendMessage(self, message):
         self.serial.write((message+self.termChar).encode('ascii'))
 
+	def command(self, commandMessage):
+		self.sendMessage(commandMessage)
+		response = self.getMessage()
+		return response
+		
     def reconnect(self):
         """Reconnect tcp connection"""
         self.disconnect()

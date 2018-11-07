@@ -1,9 +1,6 @@
 from ICommunicator import ICommunicator
 import socket
 
-NOERROR = 0
-ERROR = -1
-
 class TcpClient(ICommunicator):
 	"""Class to handle TCP connection
 	----------
@@ -30,14 +27,9 @@ class TcpClient(ICommunicator):
 	def connect(self):
 		"""Class to handle TCP connection
 		"""
-		try:
-			self.clientSocket.settimeout(self.connectTimeout)
-			self.clientSocket.connect((self.address, self.port))
-			self.connected = True 
-			return NOERROR, ""
-		except socket.error as e:
-			#print("Couldn't connect with the socket-server: "+str(e))
-			return ERROR, e
+		self.clientSocket.settimeout(self.connectTimeout)
+		self.clientSocket.connect((self.address, self.port))
+		self.connected = True 
 
 	def disconnect(self):
 		self.connected = False
@@ -54,8 +46,7 @@ class TcpClient(ICommunicator):
 		"""Reconnect tcp connection
 		"""
 		self.disconnect()
-		errorCode, errorMsg = self.connect()
-		return errorCode, errorMsg
+		self.connect()
 		
 	def isConnected(self):
 		return self.connected
@@ -73,35 +64,28 @@ class TcpClienEndChar(TcpClient):
 		endStrLen = len(self.endStr)
 		print(endStrLen)
 		message = ""
-		OK = ERROR
-		try:
+		OK = False
+		for i in range(self.maxLength):
+			lastMsg = self.clientSocket.recv(endStrLen).decode("utf-8") 
+			message += lastMsg
+			if(lastMsg == self.endStr):
+				OK = True
+				break
+		if(OK == True):
+			return message
 			
-			for i in range(self.maxLength):
-				lastMsg = self.clientSocket.recv(endStrLen).decode("utf-8") 
-				message += lastMsg
-				if(lastMsg == self.endStr):
-					OK = NOERROR
-					break
-			if(OK == ERROR):
-				return OK, message, "Message not ended"
-			if(OK == NOERROR):
-				return NOERROR, message, ""
-				
-		except socket.error as e:
-			return ERROR, "", e
-			
-		return ERROR, message, "Message not ended"
-			
+		raise ValueError('End message not found.')
+
+	def command(self, commandMessage):
+		self.sendMessage(commandMessage)
+		response = self.getMessage()
+		return response
+		
 	def sendMessage(self, message):
 		"""Placeholder to send message"""
 		internalMessage = message.encode('utf8')
 		super().sendMessage(internalMessage)
-		try:
-			self.clientSocket.send(internalMessage)
-			return NOERROR, ""
-		except socket.error as e:
-			self.connected = False #if the message couldn't be sent, it will assume that the device is not connected
-			return ERROR, e
+		self.clientSocket.send(internalMessage)
 			
 			
 class TcpServer(ICommunicator):
@@ -132,20 +116,13 @@ class TcpServer(ICommunicator):
 	def connect(self):
 		"""Class to handle TCP connection
 	
-		Returns error code:
-		NOERROR: Successfully connected
-		ERROR: Couldn't connect 
 		"""
-		try:
-			self.serverSocket.settimeout(self.connectTimeout)
-			self.serverSocket.bind((self.address, self.port))
-			self.serverSocket.listen(1)
-			self.connection, self.client_address = self.serverSocket.accept()
-			self.connected = True
-			return NOERROR, ""
-		except connection.error as e:
-			#print("Couldn't connect with the socket-server: "+str(e))
-			return ERROR, e
+		self.serverSocket.settimeout(self.connectTimeout)
+		self.serverSocket.bind((self.address, self.port))
+		self.serverSocket.listen(1)
+		self.connection, self.client_address = self.serverSocket.accept()
+		self.connected = True
+
 
 	def disconnect(self):
 		"""Disconnect from server"""
@@ -163,8 +140,7 @@ class TcpServer(ICommunicator):
 		
 	def reconnect(self):
 		self.disconnect()
-		errorCode, errorMsg = self.connect()
-		return errorCode, errorMsg
+		self.connect()
 
 	def isConnected(self):
 		return self.connected
@@ -177,36 +153,24 @@ class TcpServerEndChar(TcpServer):
 		self.maxLength = maxLength
 		
 	def getMessage(self):
-		""""""
 		super().getMessage()
 		endStrLen = len(self.endStr)
 		print(endStrLen)
 		message = ""
-		OK = ERROR
-		try:
-			
-			for i in range(self.maxLength):
-				lastMsg = self.connection.recv(endStrLen).decode("utf-8") 
-				message += lastMsg
-				if(lastMsg == self.endStr):
-					OK = NOERROR
-					break
-			if(OK == ERROR):
-				return OK, message, "Message not ended"
-			if(OK == NOERROR):
-				return NOERROR, message, ""
-				
-		except connection.error as e:
-			return ERROR, "", e
-			
-		return ERROR, message, "Message not ended"
+		OK = False
+
+		for i in range(self.maxLength):
+			lastMsg = self.connection.recv(endStrLen).decode("utf-8") 
+			message += lastMsg
+			if(lastMsg == self.endStr):
+				OK = True
+				break
+		if(OK == True):
+			return message
+
+		return message
 			
 	def sendMessage(self, message):
 		internalMessage = message.encode('utf8')
 		super().sendMessage(internalMessage)
-		try:
-			self.connection.send(internalMessage)
-			return NOERROR, ""
-		except connection.error as e:
-			self.connected = False #if the message couldn't be sent, it will assume that the device is not connected
-			return ERROR, e			
+		self.connection.send(internalMessage)
