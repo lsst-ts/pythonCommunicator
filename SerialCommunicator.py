@@ -1,9 +1,6 @@
 from .ICommunicator import ICommunicator
 import serial
-
-NOERROR = 0
-ERROR = -1
-
+from time import sleep
 
 class SerialCommunicator(ICommunicator):
     """Class to handle TCP connection
@@ -18,7 +15,7 @@ class SerialCommunicator(ICommunicator):
     Notes """
 
     def __init__(self, port, baudrate, parity, stopbits, bytesize, byteToRead=1024, dsrdtr=False, xonxoff=False,
-                 timeout=2, termChar="\n"):
+                 timeout=2, termChar="\n", delayNextMsg=0.02):
         self.port = port
         self.baudrate = baudrate
         self.parity = parity
@@ -29,6 +26,7 @@ class SerialCommunicator(ICommunicator):
         self.xonxoff = xonxoff
         self.timeout = timeout  # read timeout
         self.termChar = termChar
+        self.delayNextMsg = delayNextMsg
 
         self.serial = None
         self.deviceConnectionTimeout = 0
@@ -44,23 +42,28 @@ class SerialCommunicator(ICommunicator):
         message = []
         for i in range(self.byteToRead):
             tempMessage = self.serial.read(1)
-            if(tempMessage.decode('ascii')==self.termChar):
+            if(tempMessage.decode('ascii')==self.termChar or tempMessage.decode('ascii') ==""):
                 break
+
             message.append(tempMessage)
         strMsg = b''.join(message).decode('ascii')
-        if(strMsg == ""): 
+
+        if(strMsg ==""):
             self.deviceConnectionTimeout += 1
+            raise ValueError(f"Empty response from hardware...")
         else:
             self.deviceConnectionTimeout = 0
+
         return strMsg
 
     def sendMessage(self, message):
+        sleep(self.delayNextMsg)
         self.serial.write((message+self.termChar).encode('ascii'))
 
-	def command(self, commandMessage):
-		self.sendMessage(commandMessage)
-		response = self.getMessage()
-		return response
+    def command(self, commandMessage):
+        self.sendMessage(commandMessage)
+        response = self.getMessage()
+        return response
 		
     def reconnect(self):
         """Reconnect tcp connection"""
