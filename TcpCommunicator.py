@@ -1,4 +1,4 @@
-from ICommunicator import ICommunicator
+from pythonCommunicator.ICommunicator import ICommunicator
 import socket
 
 class TcpClient(ICommunicator):
@@ -38,6 +38,8 @@ class TcpClient(ICommunicator):
 	def getMessage(self):
 		self.clientSocket.settimeout(self.readTimeout)
 
+	def command(self, commandMessage):
+		pass
 		
 	def sendMessage(self, message):
 		self.clientSocket.settimeout(self.sendTimeout)
@@ -51,9 +53,9 @@ class TcpClient(ICommunicator):
 	def isConnected(self):
 		return self.connected
 		
-class TcpClienEndChar(TcpClient):
+class TcpClientEndChar(TcpClient):
 
-	def __init__(self, address, port, connectTimeout=2, readTimeout=2, sendTimeout=2, endStr="\n", maxLength = 1024):
+	def __init__(self, address, port, connectTimeout=2, readTimeout=2, sendTimeout=2, endStr='\n', maxLength = 1024):
 		super().__init__(address, port, connectTimeout, readTimeout, sendTimeout)
 		self.endStr = endStr
 		self.maxLength = maxLength
@@ -62,19 +64,19 @@ class TcpClienEndChar(TcpClient):
 		"""Placeholder to get message"""
 		super().getMessage()
 		endStrLen = len(self.endStr)
-		print(endStrLen)
 		message = ""
 		OK = False
 		for i in range(self.maxLength):
-			lastMsg = self.clientSocket.recv(endStrLen).decode("utf-8") 
-			message += lastMsg
+			lastMsg = self.clientSocket.recv(endStrLen).decode("latin-1", errors='replace')
 			if(lastMsg == self.endStr):
 				OK = True
 				break
+			message += lastMsg
 		if(OK == True):
+			print(message)
 			return message
-			
-		raise ValueError('End message not found.')
+		else:
+			raise ValueError('End message not found.')
 
 	def command(self, commandMessage):
 		self.sendMessage(commandMessage)
@@ -83,8 +85,9 @@ class TcpClienEndChar(TcpClient):
 		
 	def sendMessage(self, message):
 		"""Placeholder to send message"""
-		internalMessage = message.encode('utf8')
+		internalMessage = (message+self.endStr).encode('utf8')
 		super().sendMessage(internalMessage)
+		print(internalMessage)
 		self.clientSocket.send(internalMessage)
 			
 			
@@ -123,7 +126,9 @@ class TcpServer(ICommunicator):
 		self.connection, self.client_address = self.serverSocket.accept()
 		self.connected = True
 
-
+	def command(self, commandMessage):
+		pass
+		
 	def disconnect(self):
 		"""Disconnect from server"""
 		self.connected = False
@@ -155,12 +160,11 @@ class TcpServerEndChar(TcpServer):
 	def getMessage(self):
 		super().getMessage()
 		endStrLen = len(self.endStr)
-		print(endStrLen)
 		message = ""
 		OK = False
 
 		for i in range(self.maxLength):
-			lastMsg = self.connection.recv(endStrLen).decode("utf-8") 
+			lastMsg = self.connection.recv(endStrLen).decode("latin-1") 
 			message += lastMsg
 			if(lastMsg == self.endStr):
 				OK = True
@@ -171,6 +175,6 @@ class TcpServerEndChar(TcpServer):
 		return message
 			
 	def sendMessage(self, message):
-		internalMessage = message.encode('utf8')
+		internalMessage = message
 		super().sendMessage(internalMessage)
 		self.connection.send(internalMessage)
