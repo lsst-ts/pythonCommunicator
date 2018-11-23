@@ -24,7 +24,7 @@ class TcpClient(ICommunicator):
 		self.clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.connected = False
 
-		self.messageHandler = TCPEndStr(endStr='\n', maxLength=1024) if messageHandler is None else MessageHandler
+		self.messageHandler = TCPEndStr(endStr='\n', maxLength=1024) if messageHandler is None else messageHandler
 
 	def connect(self):
 		"""Class to handle TCP connection
@@ -77,12 +77,15 @@ class TcpServer(ICommunicator):
 		Timeout to send messages to the TCP server
 	Notes """
 
-	def __init__(self, address, port, connectTimeout=600, readTimeout=2, sendTimeout=2):
+	def __init__(self, address, port, connectTimeout=600, readTimeout=2, sendTimeout=2, messageHandler = None):
 		self.address = address
 		self.port = port
 		self.connectTimeout = connectTimeout
 		self.readTimeout = readTimeout
 		self.sendTimeout = sendTimeout
+
+		self.messageHandler = TCPEndStr(endStr='\n', maxLength=1024) if messageHandler is None else messageHandler
+
 		self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.connection = 0
 		self.client_address = ""
@@ -102,10 +105,11 @@ class TcpServer(ICommunicator):
 		"""Disconnect from server"""
 		self.connected = False
 		self.connection.close()
+		self.serverSocket.close()
 
 	def getMessage(self):
 		self.connection.settimeout(self.readTimeout)
-		message = self.messageHandler.getMessage(connection=self.clientSocket)
+		message = self.messageHandler.getMessage(connection=self.connection)
 		return message
 
 	def command(self, commandMessage):
@@ -135,7 +139,7 @@ class MessageHandler:
 	def getMessage(self, connection):
 		raise Exception("MessageHandler hasn't been defined")
 
-	def sendMessage(self, connection):
+	def sendMessage(self, connection, message):
 		raise Exception("MessageHandler hasn't been defined")
 
 class TCPEndStr(MessageHandler):
@@ -147,16 +151,16 @@ class TCPEndStr(MessageHandler):
 
 	def getMessage(self, connection):
 		"""Placeholder to get message"""
-		super().getMessage()
 		endStrLen = len(self.endStr)
 		message = ""
 		OK = False
 		for i in range(self.maxLength):
 			lastMsg = connection.recv(endStrLen).decode("latin-1", errors='replace')
-			if(lastMsg == self.endStr):
+			messageAux = message+lastMsg
+			if(messageAux.endswith(self.endStr)):
 				OK = True
 				break
-			message += lastMsg
+			message = messageAux
 		if(OK == True):
 			print(message)
 			return message
@@ -166,6 +170,5 @@ class TCPEndStr(MessageHandler):
 	def sendMessage(self, connection, message):
 		"""Placeholder to send message"""
 		internalMessage = (message+self.endStr).encode("latin-1")
-		super().sendMessage(internalMessage)
 		print(internalMessage)
 		connection.send(internalMessage)
