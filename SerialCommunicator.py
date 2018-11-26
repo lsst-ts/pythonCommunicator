@@ -47,7 +47,7 @@ class SerialCommunicator(ICommunicator):
 
             message.append(tempMessage)
         strMsg = b''.join(message).decode('ascii')
-
+    
         if(strMsg ==""):
             self.deviceConnectionTimeout += 1
             raise ValueError(f"Empty response from hardware...")

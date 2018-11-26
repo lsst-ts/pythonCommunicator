@@ -4,10 +4,8 @@ from random import randint, choice
 from pythonCommunicator.TcpCommunicator import TcpClient, TcpServer, TCPEndStr
 import threading
 import string
-
-# testClass = TcpClient(address="192.168.0.1", port=5000)
-# a, b = testClass.connect()
-# testClass.disconnect()
+import os, pty, serial
+from pythonCommunicator.SerialCommunicator import SerialCommunicator
 
 class TestTCP(unittest.TestCase):
 
@@ -19,6 +17,7 @@ class TestTCP(unittest.TestCase):
         self.tcpclient = TcpClient(address, port, connectTimeout, readTimeout, sendTimeout, messageHandler=messageHandlerValue)
         self.tcpserver = TcpServer(address, port, connectTimeout, readTimeout, sendTimeout, messageHandler=messageHandlerValue)
 
+    #@unittest.skip("Only test serial")
     def testSimpleEcho(self):
         
         for i in range(10,1023):
@@ -33,10 +32,32 @@ class TestTCP(unittest.TestCase):
         self.tcpclient.disconnect()
         self.tcpserver.disconnect()
         pass
-    
+
+class testSerial(unittest.TestCase):
+
+    def setUp(self):
+        self.master, self.slave = pty.openpty() #Simulate Serial device
+        self.s_name = os.ttyname(self.slave)
+        self.serialCommunicator = SerialCommunicator(self.s_name, 57600, 'N', stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS, byteToRead=1024, dsrdtr=False, xonxoff=False, timeout=2, termChar="\n", delayNextMsg=0.02)
+        self.serialCommunicator.connect()
+
+    def testMessages(self):
+        for i in range(10,1023):
+            message = ''.join(choice(string.ascii_letters) for _ in range(i))
+            t = threading.Thread( target=serialEcho, args=(self.master,) )
+            t.start()
+            messageRcvd = sendMessageEcho(self.serialCommunicator, message)
+            print("message:" + message)
+            print("messageRcvd:" + messageRcvd)
+            self.assertEqual(message, messageRcvd)
+            t.join()
+
+    def tearDown(self):
+        self.serialCommunicator.disconnect()
+
 def echo(tcpserver):
     print("Starting echo...")
-    if tcpserver.connected == False:
+    if tcpserver.isConnected() == False:
         tcpserver.connect()
     message = tcpserver.getMessage()
     tcpserver.sendMessage(message)
@@ -45,11 +66,17 @@ def echo(tcpserver):
 
 def sendMessageEcho(tcpclient, message):
     print("Starting sendMessageEcho...")
-    if tcpclient.connected == False:
+    if tcpclient.isConnected() == False:
         tcpclient.connect()
     tcpclient.sendMessage(message)
     message = tcpclient.getMessage()
     print("Stopping server...")
+
+    return message
+
+def serialEcho(master):
+    message = os.read(master,1025)
+    os.write(master, message)
 
     return message
 
