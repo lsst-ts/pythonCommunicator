@@ -20,7 +20,7 @@ class TestTCP(unittest.TestCase):
     #@unittest.skip("Only test serial")
     def testSimpleEcho(self):
         
-        for i in range(10,1023):
+        for i in range(1,1023):
             message = ''.join(choice(string.ascii_letters) for _ in range(i))
             t = threading.Thread( target=echo, args=(self.tcpserver,) )
             t.start()
@@ -30,7 +30,7 @@ class TestTCP(unittest.TestCase):
 
     def tearDown(self):
         self.tcpclient.disconnect()
-        self.tcpserver.disconnect()
+        #self.tcpserver.disconnect()
         pass
 
 class testSerial(unittest.TestCase):
