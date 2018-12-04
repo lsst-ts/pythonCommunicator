@@ -5,7 +5,7 @@ from pythonCommunicator.TcpCommunicator import TcpClient, TcpServer, TCPEndStr
 import threading
 import string
 import os, pty, serial
-from pythonCommunicator.SerialCommunicator import SerialCommunicator
+from lsst.ts.pythonCommunicator.SerialCommunicator import SerialCommunicator
 
 class TestTCP(unittest.TestCase):
 
