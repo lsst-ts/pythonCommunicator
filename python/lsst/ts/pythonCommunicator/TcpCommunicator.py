@@ -1,4 +1,4 @@
-from pythonCommunicator.ICommunicator import ICommunicator
+from lsst.ts.pythonCommunicator.ICommunicator import ICommunicator
 import socket
 
 class TcpClient(ICommunicator):

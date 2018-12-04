@@ -1,4 +1,4 @@
-from .ICommunicator import ICommunicator
+from lsst.ts.pythonCommunicator.ICommunicator import ICommunicator
 import serial
 from time import sleep
 
