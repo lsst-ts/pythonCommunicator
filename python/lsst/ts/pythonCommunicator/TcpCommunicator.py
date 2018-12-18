@@ -99,8 +99,11 @@ class TcpClientAsync(ICommunicator):
     async def connect(self):
         """Function to connect to a TCP server
         """
-        self.reader, self.writer = await asyncio.open_connection(self.address, self.port, 
-                                                                 limit=self.messageHandler.maxLength)
+        try:
+            self.reader, self.writer = await asyncio.wait_for(asyncio.open_connection(
+                self.address, self.port, limit=self.messageHandler.maxLength), self.connectTimeout)
+        except:
+            raise AssertionError("TCP Connection timeout")
         # ssl_handshake_timeout is for newer versions
         # self.reader, self.writer = await asyncio.open_connection(self.address, self.port, 
         #                                                          limit=self.messageHandler.maxLength, 
@@ -114,7 +117,11 @@ class TcpClientAsync(ICommunicator):
         # await self.writer.wait_closed()
 
     async def getMessage(self):
-        message = await self.messageHandler.getMessage(connection=self.reader)
+        try:
+            message = await asyncio.wait_for(self.messageHandler.getMessage(connection=self.reader),
+                                             self.readTimeout)
+        except:
+            raise AssertionError("TCP Reading timeout")
         return message
 
     async def command(self, commandMessage):
@@ -124,8 +131,11 @@ class TcpClientAsync(ICommunicator):
         return message
 
     async def sendMessage(self, message):
-        await self.messageHandler.sendMessage(
-            connection=self.writer, message=message)
+        try:
+            await asyncio.wait_for(self.messageHandler.sendMessage(
+                connection=self.writer, message=message), self.sendTimeout)
+        except:
+            raise AssertionError("TCP Reading timeout")
 
     async def reconnect(self):
         """Reconnect tcp connection
